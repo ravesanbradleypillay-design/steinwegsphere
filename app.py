@@ -3,10 +3,6 @@ import pandas as pd
 import os
 
 
-# =========================
-# PAGE CONFIG
-# =========================
-
 st.set_page_config(
     page_title="Steinweg Freight Calculator",
     page_icon="🚢",
@@ -17,61 +13,68 @@ st.set_page_config(
 st.title("STEINWEG")
 st.subheader("Master Freight & Transport Calculator")
 
-st.divider()
 
+# EXACT FILE NAMES FROM GITHUB
 
-# =========================
-# EXCEL FILES
-# =========================
-
-freight_file = "freight_rates.xlsx"
-transport_file = "transport_rates.xlsx"
+freight_file = "freight rates.xlsx"
+transport_file = "transport rates.xlsx"
 
 
 
-# =========================
-# LOAD DATA
-# =========================
+# SHOW FILES STREAMLIT CAN SEE
+
+st.write("Files detected by Streamlit:")
+
+st.write(
+    os.listdir()
+)
+
+
+
+# CHECK FILES
+
+if freight_file not in os.listdir():
+
+    st.error(
+        "Cannot find freight rates.xlsx"
+    )
+
+    st.stop()
+
+
+
+if transport_file not in os.listdir():
+
+    st.error(
+        "Cannot find transport rates.xlsx"
+    )
+
+    st.stop()
+
+
+
+# LOAD FILES
 
 @st.cache_data
-def load_excel():
+def load_files():
 
     freight = pd.read_excel(
-        freight_file,
-        engine="openpyxl"
+        freight_file
     )
 
     transport = pd.read_excel(
-        transport_file,
-        engine="openpyxl"
+        transport_file
     )
 
     return freight, transport
 
 
 
-# Check files exist
-
-if not os.path.exists(freight_file):
-
-    st.error("freight_rates.xlsx is missing from GitHub")
-
-    st.stop()
-
-
-if not os.path.exists(transport_file):
-
-    st.error("transport_rates.xlsx is missing from GitHub")
-
-    st.stop()
+freight, transport = load_files()
 
 
 
-freight, transport = load_excel()
-
-
-
-# Clean column names
+# CLEAN HEADERS
 
 freight.columns = (
     freight.columns
@@ -88,11 +91,9 @@ transport.columns = (
 
 
 
-# =========================
-# SHOW DATABASE STATUS
-# =========================
+# PREVIEW
 
-with st.expander("Database Preview"):
+with st.expander("View Excel Data"):
 
     st.write("Freight Rates")
 
@@ -109,54 +110,46 @@ with st.expander("Database Preview"):
 
 
 
-# =========================
-# SHIPMENT DETAILS
-# =========================
+st.divider()
+
 
 st.header("Shipment Details")
 
 
-col1, col2, col3 = st.columns(3)
-
-
-with col1:
-
-    pod = st.selectbox(
-        "POD",
-        sorted(
-            freight["POD"]
-            .dropna()
-            .unique()
-        )
+pod = st.selectbox(
+    "POD",
+    sorted(
+        freight["POD"]
+        .dropna()
+        .unique()
     )
+)
 
 
-with col2:
 
-    equipment = st.selectbox(
-        "Equipment Type",
-        sorted(
-            freight["EQUIP TYPE"]
-            .dropna()
-            .unique()
-        )
+equipment = st.selectbox(
+    "Equipment Type",
+    sorted(
+        freight["EQUIP TYPE"]
+        .dropna()
+        .unique()
     )
+)
 
 
-with col3:
 
-    payment = st.selectbox(
-        "Prepaid / Collect",
-        sorted(
-            freight["PREPAID / COLLECT"]
-            .dropna()
-            .unique()
-        )
+payment = st.selectbox(
+    "Prepaid / Collect",
+    sorted(
+        freight["PREPAID / COLLECT"]
+        .dropna()
+        .unique()
     )
+)
 
 
 
-containers = st.number_input(
+qty = st.number_input(
     "Number of Containers",
     min_value=1,
     value=1
@@ -165,13 +158,6 @@ containers = st.number_input(
 
 
 st.divider()
-
-
-# =========================
-# TRANSPORT DETAILS
-# =========================
-
-st.header("Transport")
 
 
 zone = st.selectbox(
@@ -185,18 +171,10 @@ zone = st.selectbox(
 
 
 
-# =========================
-# CALCULATE
-# =========================
-
-if st.button("Calculate Quote"):
+if st.button("Calculate"):
 
 
-    # ---------------------
-    # FREIGHT SEARCH
-    # ---------------------
-
-    freight_result = freight[
+    freight_match = freight[
 
         (freight["POD"] == pod)
 
@@ -211,9 +189,10 @@ if st.button("Calculate Quote"):
     ]
 
 
-    if freight_result.empty:
 
-        ocean_rate = 0
+    if freight_match.empty:
+
+        freight_cost = 0
 
         st.warning(
             "No freight rate found"
@@ -221,26 +200,23 @@ if st.button("Calculate Quote"):
 
     else:
 
-        ocean_rate = float(
-            freight_result.iloc[0]["ALL IN RATE"]
+        freight_cost = float(
+            freight_match.iloc[0]["ALL IN RATE"]
         )
 
 
 
-    # ---------------------
-    # TRANSPORT SEARCH
-    # ---------------------
-
-    transport_result = transport[
+    transport_match = transport[
 
         transport["ZONE"] == zone
 
     ]
 
 
-    if transport_result.empty:
 
-        transport_rate = 0
+    if transport_match.empty:
+
+        transport_cost = 0
 
         st.warning(
             "No transport rate found"
@@ -248,55 +224,35 @@ if st.button("Calculate Quote"):
 
     else:
 
-        transport_rate = float(
-            transport_result.iloc[0]["TOTAL CHARGE"]
+        transport_cost = float(
+            transport_match.iloc[0]["TOTAL CHARGE"]
         )
 
 
 
-    # ---------------------
-    # TOTALS
-    # ---------------------
-
-    freight_total = ocean_rate * containers
-
-    transport_total = transport_rate * containers
-
-
     total = (
-        freight_total +
-        transport_total
+        (freight_cost + transport_cost)
+        *
+        qty
     )
 
 
-
-    # ---------------------
-    # OUTPUT
-    # ---------------------
 
     st.success(
-        "Quote Generated Successfully"
-    )
-
-
-    st.subheader(
-        "Cost Breakdown"
+        "Calculation Complete"
     )
 
 
     st.write(
-        f"Ocean Freight: R {freight_total:,.2f}"
+        f"Ocean Freight: R {freight_cost:,.2f}"
     )
 
 
     st.write(
-        f"Transport ({zone}): R {transport_total:,.2f}"
+        f"Transport: R {transport_cost:,.2f}"
     )
-
-
-    st.divider()
 
 
     st.header(
-        f"TOTAL LOGISTICS COST: R {total:,.2f}"
+        f"TOTAL: R {total:,.2f}"
     )
