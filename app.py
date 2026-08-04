@@ -17,7 +17,7 @@ st.set_page_config(
 
 
 # =========================================================
-# BLUE DASHBOARD DESIGN
+# BLUE APP DESIGN
 # =========================================================
 
 st.markdown(
@@ -25,8 +25,7 @@ st.markdown(
     <style>
 
     .stApp {
-        background:
-        linear-gradient(
+        background: linear-gradient(
             135deg,
             #020b18 0%,
             #062344 50%,
@@ -51,8 +50,7 @@ st.markdown(
 
     .stTextInput label,
     .stSelectbox label,
-    .stNumberInput label,
-    .stRadio label {
+    .stNumberInput label {
         color: #d4efff !important;
         font-weight: 650 !important;
     }
@@ -61,15 +59,15 @@ st.markdown(
     .stNumberInput input {
         background-color: white !important;
         color: #10243b !important;
-        border-radius: 10px !important;
         border: 1px solid #4bbdf5 !important;
+        border-radius: 10px !important;
     }
 
     div[data-baseweb="select"] > div {
         background-color: white !important;
         color: #10243b !important;
+        border: 1px solid #4bbdf5 !important;
         border-radius: 10px !important;
-        border-color: #4bbdf5 !important;
     }
 
     div[data-baseweb="select"] * {
@@ -81,8 +79,7 @@ st.markdown(
         min-height: 44px;
         border-radius: 10px;
         border: 1px solid #35c3ff;
-        background:
-        linear-gradient(
+        background: linear-gradient(
             90deg,
             #007dc4,
             #00aeea
@@ -93,8 +90,7 @@ st.markdown(
 
     .stButton button:hover {
         border-color: white;
-        background:
-        linear-gradient(
+        background: linear-gradient(
             90deg,
             #009de5,
             #24cfff
@@ -103,12 +99,19 @@ st.markdown(
     }
 
     div[data-testid="stMetric"] {
-        background:
-        rgba(3, 25, 52, 0.88);
+        background: rgba(
+            3,
+            25,
+            52,
+            0.88
+        );
 
-        border:
-        1px solid
-        rgba(72, 191, 245, 0.45);
+        border: 1px solid rgba(
+            72,
+            191,
+            245,
+            0.45
+        );
 
         border-radius: 16px;
         padding: 18px;
@@ -122,9 +125,31 @@ st.markdown(
         color: white !important;
     }
 
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(
+            3,
+            25,
+            52,
+            0.82
+        );
+
+        border: 1px solid rgba(
+            75,
+            195,
+            250,
+            0.40
+        );
+
+        border-radius: 18px;
+    }
+
     hr {
-        border-color:
-        rgba(83, 195, 250, 0.25);
+        border-color: rgba(
+            83,
+            195,
+            250,
+            0.25
+        );
     }
 
     </style>
@@ -134,17 +159,17 @@ st.markdown(
 
 
 # =========================================================
-# HEADER
+# APP HEADER
 # =========================================================
 
 st.markdown(
     """
     <h1 style="
-    text-align:center;
-    margin-bottom:0;
-    font-size:48px;
+        text-align: center;
+        margin-bottom: 0;
+        font-size: 48px;
     ">
-    C. STEINWEG
+        C. STEINWEG
     </h1>
     """,
     unsafe_allow_html=True
@@ -153,12 +178,12 @@ st.markdown(
 st.markdown(
     """
     <h3 style="
-    text-align:center;
-    color:#55cfff !important;
-    letter-spacing:7px;
-    margin-top:0;
+        text-align: center;
+        color: #55cfff !important;
+        letter-spacing: 7px;
+        margin-top: 0;
     ">
-    BRIDGE
+        BRIDGE
     </h3>
     """,
     unsafe_allow_html=True
@@ -167,12 +192,12 @@ st.markdown(
 st.markdown(
     """
     <p style="
-    text-align:center;
-    color:#b9e8ff;
-    font-size:17px;
-    margin-bottom:35px;
+        text-align: center;
+        color: #b9e8ff;
+        font-size: 17px;
+        margin-bottom: 35px;
     ">
-    Master Ocean Freight & Landside Transport Calculator
+        Master Ocean Freight & Landside Transport Calculator
     </p>
     """,
     unsafe_allow_html=True
@@ -236,7 +261,7 @@ freight, transport = load_data()
 
 
 # =========================================================
-# CLEAN FREIGHT HEADINGS
+# CLEAN FREIGHT DATA
 # =========================================================
 
 freight.columns = (
@@ -277,7 +302,7 @@ if missing_columns:
     )
 
     st.write(
-        "Columns detected:"
+        "Columns found:"
     )
 
     st.write(
@@ -521,8 +546,9 @@ with search_three:
 
 
 st.caption(
-    "POL and POD are free-text fields. "
-    "You can enter all or part of the port name."
+    "Enter all or part of the port name. "
+    "The container dropdown filters "
+    "the available freight rates."
 )
 
 
@@ -560,7 +586,7 @@ if (
 
 
     # =====================================================
-    # FILTER 20FT OR 40FT
+    # FILTER BY 20FT OR 40FT
     # =====================================================
 
     route_matches = route_matches[
@@ -620,7 +646,7 @@ if (
 
 
     # =====================================================
-    # RESET OLD SELECTION
+    # RESET SELECTION FOR NEW SEARCH
     # =====================================================
 
     current_search = (
@@ -646,9 +672,11 @@ if (
 
     ):
 
+
         st.session_state[
             "last_search"
         ] = current_search
+
 
         st.session_state.pop(
             "selected_freight_row",
@@ -743,177 +771,60 @@ if (
             with card_columns[position]:
 
 
-                st.markdown(
-
-                    f"""
-
-                    <div style="
-
-                    background:
-
-                    linear-gradient(
-
-                    145deg,
-
-                    rgba(4,28,58,0.98),
-
-                    rgba(5,73,124,0.92)
-
-                    );
-
-                    border:
-
-                    1px solid
-
-                    rgba(75,195,250,0.45);
-
-                    border-radius:18px;
-
-                    padding:20px;
-
-                    min-height:235px;
-
-                    box-shadow:
-
-                    0 10px 28px
-
-                    rgba(0,0,0,0.30);
-
-                    ">
-
-
-                    <div style="
-
-                    width:65px;
-
-                    height:65px;
-
-                    border-radius:16px;
-
-                    background:
-
-                    linear-gradient(
-
-                    135deg,
-
-                    #008ed3,
-
-                    #00c7ee
-
-                    );
-
-                    display:flex;
-
-                    align-items:center;
-
-                    justify-content:center;
-
-                    color:white;
-
-                    font-size:23px;
-
-                    font-weight:800;
-
-                    margin-bottom:14px;
-
-                    ">
-
-                    {initials}
-
-                    </div>
-
-
-                    <div style="
-
-                    color:white;
-
-                    font-size:23px;
-
-                    font-weight:800;
-
-                    ">
-
-                    {line}
-
-                    </div>
-
-
-                    <div style="
-
-                    color:#55d0ff;
-
-                    font-size:27px;
-
-                    font-weight:800;
-
-                    margin-top:10px;
-
-                    ">
-
-                    USD {rate:,.2f}
-
-                    </div>
-
-
-                    <div style="
-
-                    color:#b7e8ff;
-
-                    margin-top:12px;
-
-                    ">
-
-                    <b>Routing:</b>
-
-                    {routing}
-
-                    </div>
-
-
-                    <div style="
-
-                    color:#b7e8ff;
-
-                    margin-top:7px;
-
-                    ">
-
-                    <b>Frequency:</b>
-
-                    {frequency}
-
-                    </div>
-
-
-                    </div>
-
-                    """,
-
-                    unsafe_allow_html=True
-
-                )
-
-
-                if st.button(
-
-                    "Select Shipping Line",
-
-                    key=(
-                        f"select_"
-                        f"{row_number}"
-                    )
-
+                with st.container(
+                    border=True
                 ):
 
 
-                    st.session_state[
-
-                        "selected_freight_row"
-
-                    ] = row_number
+                    st.markdown(
+                        f"## 🚢 {line}"
+                    )
 
 
-                    st.rerun()
+                    st.metric(
+                        "Ocean Freight Rate",
+                        f"USD {rate:,.2f}"
+                    )
+
+
+                    st.write(
+                        f"**Routing:** "
+                        f"{routing}"
+                    )
+
+
+                    st.write(
+                        f"**Frequency:** "
+                        f"{frequency}"
+                    )
+
+
+                    st.caption(
+                        f"Carrier code: "
+                        f"{initials}"
+                    )
+
+
+                    if st.button(
+
+                        "Select Shipping Line",
+
+                        key=(
+                            f"select_"
+                            f"{row_number}"
+                        )
+
+                    ):
+
+
+                        st.session_state[
+
+                            "selected_freight_row"
+
+                        ] = row_number
+
+
+                        st.rerun()
 
 
     # =====================================================
@@ -930,10 +841,12 @@ if (
 
     ):
 
+
         st.info(
             "Select a shipping line "
             "above to continue."
         )
+
 
         st.stop()
 
@@ -1070,7 +983,7 @@ if (
 
 
     # =====================================================
-    # TRANSPORT
+    # LANDSIDE TRANSPORT
     # =====================================================
 
     st.divider()
@@ -1136,7 +1049,7 @@ if (
 
 
     # =====================================================
-    # TRANSPORT COLUMNS
+    # TRANSPORT COLUMN MAP
     # =====================================================
 
     zone_columns = {
@@ -1176,6 +1089,10 @@ if (
 
     )
 
+
+    # =====================================================
+    # FIND TRANSPORT SECTION
+    # =====================================================
 
     section_start = None
 
