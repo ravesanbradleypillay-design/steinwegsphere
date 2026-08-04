@@ -4,7 +4,7 @@ import os
 
 
 # =========================
-# PAGE SETTINGS
+# PAGE CONFIG
 # =========================
 
 st.set_page_config(
@@ -21,52 +21,53 @@ st.divider()
 
 
 # =========================
-# FILES
+# EXCEL FILES
 # =========================
 
-freight_file = "freight_rates.xls"
-transport_file = "transport_rates.xls"
+freight_file = "freight_rates.xlsx"
+transport_file = "transport_rates.xlsx"
 
 
 
 # =========================
-# LOAD EXCEL FILES
+# LOAD DATA
 # =========================
 
 @st.cache_data
-def load_data():
+def load_excel():
 
     freight = pd.read_excel(
-        freight_file
+        freight_file,
+        engine="openpyxl"
     )
 
     transport = pd.read_excel(
-        transport_file
+        transport_file,
+        engine="openpyxl"
     )
 
     return freight, transport
 
 
 
-# Check files
+# Check files exist
 
 if not os.path.exists(freight_file):
 
-    st.error("freight_rates.xls is missing from GitHub")
+    st.error("freight_rates.xlsx is missing from GitHub")
 
     st.stop()
-
 
 
 if not os.path.exists(transport_file):
 
-    st.error("transport_rates.xls is missing from GitHub")
+    st.error("transport_rates.xlsx is missing from GitHub")
 
     st.stop()
 
 
 
-freight, transport = load_data()
+freight, transport = load_excel()
 
 
 
@@ -88,14 +89,34 @@ transport.columns = (
 
 
 # =========================
-# FREIGHT DATABASE
+# SHOW DATABASE STATUS
+# =========================
+
+with st.expander("Database Preview"):
+
+    st.write("Freight Rates")
+
+    st.dataframe(
+        freight.head()
+    )
+
+
+    st.write("Transport Rates")
+
+    st.dataframe(
+        transport.head()
+    )
+
+
+
+# =========================
+# SHIPMENT DETAILS
 # =========================
 
 st.header("Shipment Details")
 
 
 col1, col2, col3 = st.columns(3)
-
 
 
 with col1:
@@ -146,11 +167,9 @@ containers = st.number_input(
 st.divider()
 
 
-
 # =========================
-# TRANSPORT
+# TRANSPORT DETAILS
 # =========================
-
 
 st.header("Transport")
 
@@ -170,13 +189,14 @@ zone = st.selectbox(
 # CALCULATE
 # =========================
 
-
 if st.button("Calculate Quote"):
 
 
-    # Find freight rate
+    # ---------------------
+    # FREIGHT SEARCH
+    # ---------------------
 
-    freight_match = freight[
+    freight_result = freight[
 
         (freight["POD"] == pod)
 
@@ -191,8 +211,7 @@ if st.button("Calculate Quote"):
     ]
 
 
-
-    if freight_match.empty:
+    if freight_result.empty:
 
         ocean_rate = 0
 
@@ -203,22 +222,23 @@ if st.button("Calculate Quote"):
     else:
 
         ocean_rate = float(
-            freight_match.iloc[0]["ALL IN RATE"]
+            freight_result.iloc[0]["ALL IN RATE"]
         )
 
 
 
-    # Find transport rate
+    # ---------------------
+    # TRANSPORT SEARCH
+    # ---------------------
 
-    transport_match = transport[
+    transport_result = transport[
 
         transport["ZONE"] == zone
 
     ]
 
 
-
-    if transport_match.empty:
+    if transport_result.empty:
 
         transport_rate = 0
 
@@ -229,31 +249,33 @@ if st.button("Calculate Quote"):
     else:
 
         transport_rate = float(
-            transport_match.iloc[0]["TOTAL CHARGE"]
+            transport_result.iloc[0]["TOTAL CHARGE"]
         )
 
 
 
-    # Total
+    # ---------------------
+    # TOTALS
+    # ---------------------
 
-    ocean_total = ocean_rate * containers
+    freight_total = ocean_rate * containers
 
     transport_total = transport_rate * containers
 
-    grand_total = (
-        ocean_total +
+
+    total = (
+        freight_total +
         transport_total
     )
 
 
 
-    # =========================
-    # RESULTS
-    # =========================
-
+    # ---------------------
+    # OUTPUT
+    # ---------------------
 
     st.success(
-        "Quote Generated"
+        "Quote Generated Successfully"
     )
 
 
@@ -263,7 +285,7 @@ if st.button("Calculate Quote"):
 
 
     st.write(
-        f"Ocean Freight ({containers} containers): R {ocean_total:,.2f}"
+        f"Ocean Freight: R {freight_total:,.2f}"
     )
 
 
@@ -276,5 +298,5 @@ if st.button("Calculate Quote"):
 
 
     st.header(
-        f"TOTAL LOGISTICS COST: R {grand_total:,.2f}"
+        f"TOTAL LOGISTICS COST: R {total:,.2f}"
     )
