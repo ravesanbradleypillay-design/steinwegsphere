@@ -3,6 +3,10 @@ import pandas as pd
 import os
 
 
+# =========================
+# PAGE SETTINGS
+# =========================
+
 st.set_page_config(
     page_title="Steinweg Freight Calculator",
     page_icon="🚢",
@@ -14,67 +18,68 @@ st.title("STEINWEG")
 st.subheader("Master Freight & Transport Calculator")
 
 
-# EXACT FILE NAMES FROM GITHUB
+# =========================
+# FILE NAMES
+# =========================
 
 freight_file = "freight rates.xlsx"
-transport_file = "transport rates.xlsx"
+transport_file = "transport rates.xls"
 
 
 
-# SHOW FILES STREAMLIT CAN SEE
-
-st.write("Files detected by Streamlit:")
-
-st.write(
-    os.listdir()
-)
-
-
-
+# =========================
 # CHECK FILES
+# =========================
 
-if freight_file not in os.listdir():
+files = os.listdir()
 
-    st.error(
-        "Cannot find freight rates.xlsx"
-    )
+st.write("Files detected:")
+st.write(files)
+
+
+if freight_file not in files:
+
+    st.error("Missing freight rates.xlsx")
+
+    st.stop()
+
+
+if transport_file not in files:
+
+    st.error("Missing transport rates.xls")
 
     st.stop()
 
 
 
-if transport_file not in os.listdir():
-
-    st.error(
-        "Cannot find transport rates.xlsx"
-    )
-
-    st.stop()
-
-
-
-# LOAD FILES
+# =========================
+# LOAD DATA
+# =========================
 
 @st.cache_data
-def load_files():
+def load_data():
 
     freight = pd.read_excel(
-        freight_file
+        freight_file,
+        engine="openpyxl"
     )
 
+
     transport = pd.read_excel(
-        transport_file
+        transport_file,
+        engine="xlrd"
     )
+
 
     return freight, transport
 
 
 
-freight, transport = load_files()
+freight, transport = load_data()
 
 
 
-# CLEAN HEADERS
+# Clean column names
 
 freight.columns = (
     freight.columns
@@ -91,21 +96,21 @@ transport.columns = (
 
 
 
-# PREVIEW
+# =========================
+# SHOW DATA
+# =========================
 
-with st.expander("View Excel Data"):
-
-    st.write("Freight Rates")
+with st.expander("View Freight Database"):
 
     st.dataframe(
-        freight.head()
+        freight.head(10)
     )
 
 
-    st.write("Transport Rates")
+with st.expander("View Transport Database"):
 
     st.dataframe(
-        transport.head()
+        transport.head(10)
     )
 
 
@@ -113,43 +118,55 @@ with st.expander("View Excel Data"):
 st.divider()
 
 
+
+# =========================
+# SHIPMENT INPUTS
+# =========================
+
 st.header("Shipment Details")
 
 
-pod = st.selectbox(
-    "POD",
-    sorted(
-        freight["POD"]
-        .dropna()
-        .unique()
+col1, col2, col3 = st.columns(3)
+
+
+with col1:
+
+    pod = st.selectbox(
+        "POD",
+        sorted(
+            freight["POD"]
+            .dropna()
+            .unique()
+        )
     )
-)
 
 
+with col2:
 
-equipment = st.selectbox(
-    "Equipment Type",
-    sorted(
-        freight["EQUIP TYPE"]
-        .dropna()
-        .unique()
+    equipment = st.selectbox(
+        "Equipment Type",
+        sorted(
+            freight["EQUIP TYPE"]
+            .dropna()
+            .unique()
+        )
     )
-)
 
 
+with col3:
 
-payment = st.selectbox(
-    "Prepaid / Collect",
-    sorted(
-        freight["PREPAID / COLLECT"]
-        .dropna()
-        .unique()
+    payment = st.selectbox(
+        "Prepaid / Collect",
+        sorted(
+            freight["PREPAID / COLLECT"]
+            .dropna()
+            .unique()
+        )
     )
-)
 
 
 
-qty = st.number_input(
+quantity = st.number_input(
     "Number of Containers",
     min_value=1,
     value=1
@@ -158,6 +175,14 @@ qty = st.number_input(
 
 
 st.divider()
+
+
+
+# =========================
+# TRANSPORT
+# =========================
+
+st.header("Transport")
 
 
 zone = st.selectbox(
@@ -171,8 +196,14 @@ zone = st.selectbox(
 
 
 
-if st.button("Calculate"):
+# =========================
+# CALCULATE
+# =========================
 
+if st.button("Calculate Quote"):
+
+
+    # Freight lookup
 
     freight_match = freight[
 
@@ -189,10 +220,9 @@ if st.button("Calculate"):
     ]
 
 
-
     if freight_match.empty:
 
-        freight_cost = 0
+        ocean_rate = 0
 
         st.warning(
             "No freight rate found"
@@ -200,11 +230,13 @@ if st.button("Calculate"):
 
     else:
 
-        freight_cost = float(
+        ocean_rate = float(
             freight_match.iloc[0]["ALL IN RATE"]
         )
 
 
+
+    # Transport lookup
 
     transport_match = transport[
 
@@ -213,10 +245,9 @@ if st.button("Calculate"):
     ]
 
 
-
     if transport_match.empty:
 
-        transport_cost = 0
+        transport_rate = 0
 
         st.warning(
             "No transport rate found"
@@ -224,35 +255,51 @@ if st.button("Calculate"):
 
     else:
 
-        transport_cost = float(
+        transport_rate = float(
             transport_match.iloc[0]["TOTAL CHARGE"]
         )
 
 
 
+    # Totals
+
+    ocean_total = ocean_rate * quantity
+
+    transport_total = transport_rate * quantity
+
+
     total = (
-        (freight_cost + transport_cost)
-        *
-        qty
+        ocean_total +
+        transport_total
     )
 
 
+
+    # Results
 
     st.success(
-        "Calculation Complete"
+        "Quote Generated"
+    )
+
+
+    st.subheader(
+        "Cost Breakdown"
     )
 
 
     st.write(
-        f"Ocean Freight: R {freight_cost:,.2f}"
+        f"Ocean Freight: R {ocean_total:,.2f}"
     )
 
 
     st.write(
-        f"Transport: R {transport_cost:,.2f}"
+        f"Transport ({zone}): R {transport_total:,.2f}"
     )
+
+
+    st.divider()
 
 
     st.header(
-        f"TOTAL: R {total:,.2f}"
+        f"TOTAL LOGISTICS COST: R {total:,.2f}"
     )
