@@ -3,8 +3,12 @@ import pandas as pd
 import os
 
 
+# =========================
+# PAGE SETTINGS
+# =========================
+
 st.set_page_config(
-    page_title="Steinweg Landside Calculator",
+    page_title="Steinweg Freight Calculator",
     page_icon="🚢",
     layout="wide"
 )
@@ -13,18 +17,24 @@ st.set_page_config(
 st.title("STEINWEG")
 st.subheader("Master Freight & Transport Calculator")
 
+st.divider()
 
+
+# =========================
 # FILES
+# =========================
 
-freight_file = "Copy of CSI Africa Buy Sell Rates Manual - (01 Aug 2026) V.1.xls"
-transport_file = "CSL - July 2026.xls"
+freight_file = "freight_rates.xls"
+transport_file = "transport_rates.xls"
 
 
 
-# LOAD EXCEL
+# =========================
+# LOAD EXCEL FILES
+# =========================
 
 @st.cache_data
-def load_excel():
+def load_data():
 
     freight = pd.read_excel(
         freight_file
@@ -38,22 +48,29 @@ def load_excel():
 
 
 
+# Check files
+
 if not os.path.exists(freight_file):
-    st.error("Freight Excel file missing")
+
+    st.error("freight_rates.xls is missing from GitHub")
+
     st.stop()
+
 
 
 if not os.path.exists(transport_file):
-    st.error("Transport Excel file missing")
+
+    st.error("transport_rates.xls is missing from GitHub")
+
     st.stop()
 
 
 
-freight, transport = load_excel()
+freight, transport = load_data()
 
 
 
-# CLEAN HEADERS
+# Clean column names
 
 freight.columns = (
     freight.columns
@@ -70,66 +87,15 @@ transport.columns = (
 
 
 
-# FIND IMPORTANT COLUMNS AUTOMATICALLY
-
-def find_column(df, words):
-
-    for col in df.columns:
-
-        for word in words:
-
-            if word.lower() in col.lower():
-                return col
-
-    return None
-
-
-
-pod_col = find_column(
-    freight,
-    ["POD"]
-)
-
-
-equip_col = find_column(
-    freight,
-    ["EQUIP"]
-)
-
-
-rate_col = find_column(
-    freight,
-    ["ALL IN", "RATE"]
-)
-
-
-payment_col = find_column(
-    freight,
-    ["PREPAID"]
-)
-
-
-
-zone_col = find_column(
-    transport,
-    ["ZONE"]
-)
-
-
-charge_col = find_column(
-    transport,
-    ["TOTAL"]
-)
-
-
-
-st.divider()
-
+# =========================
+# FREIGHT DATABASE
+# =========================
 
 st.header("Shipment Details")
 
 
-col1,col2,col3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
+
 
 
 with col1:
@@ -137,7 +103,7 @@ with col1:
     pod = st.selectbox(
         "POD",
         sorted(
-            freight[pod_col]
+            freight["POD"]
             .dropna()
             .unique()
         )
@@ -149,7 +115,7 @@ with col2:
     equipment = st.selectbox(
         "Equipment Type",
         sorted(
-            freight[equip_col]
+            freight["EQUIP TYPE"]
             .dropna()
             .unique()
         )
@@ -159,9 +125,9 @@ with col2:
 with col3:
 
     payment = st.selectbox(
-        "Payment Type",
+        "Prepaid / Collect",
         sorted(
-            freight[payment_col]
+            freight["PREPAID / COLLECT"]
             .dropna()
             .unique()
         )
@@ -169,21 +135,7 @@ with col3:
 
 
 
-st.divider()
-
-
-zone = st.selectbox(
-    "Transport Zone",
-    sorted(
-        transport[zone_col]
-        .dropna()
-        .unique()
-    )
-)
-
-
-
-qty = st.number_input(
+containers = st.number_input(
     "Number of Containers",
     min_value=1,
     value=1
@@ -191,63 +143,113 @@ qty = st.number_input(
 
 
 
-if st.button("Calculate"):
+st.divider()
 
 
-    # FREIGHT LOOKUP
 
-    freight_result = freight[
+# =========================
+# TRANSPORT
+# =========================
 
-        (freight[pod_col] == pod)
+
+st.header("Transport")
+
+
+zone = st.selectbox(
+    "Transport Zone",
+    sorted(
+        transport["ZONE"]
+        .dropna()
+        .unique()
+    )
+)
+
+
+
+# =========================
+# CALCULATE
+# =========================
+
+
+if st.button("Calculate Quote"):
+
+
+    # Find freight rate
+
+    freight_match = freight[
+
+        (freight["POD"] == pod)
 
         &
 
-        (freight[equip_col] == equipment)
+        (freight["EQUIP TYPE"] == equipment)
 
         &
 
-        (freight[payment_col] == payment)
+        (freight["PREPAID / COLLECT"] == payment)
 
     ]
 
 
 
-    if len(freight_result) > 0:
+    if freight_match.empty:
 
-        ocean = float(
-            freight_result.iloc[0][rate_col]
+        ocean_rate = 0
+
+        st.warning(
+            "No freight rate found"
         )
 
     else:
 
-        ocean = 0
+        ocean_rate = float(
+            freight_match.iloc[0]["ALL IN RATE"]
+        )
 
 
 
-    # TRANSPORT LOOKUP
+    # Find transport rate
 
-    transport_result = transport[
-        transport[zone_col] == zone
+    transport_match = transport[
+
+        transport["ZONE"] == zone
+
     ]
 
 
-    if len(transport_result) > 0:
 
-        inland = float(
-            transport_result.iloc[0][charge_col]
+    if transport_match.empty:
+
+        transport_rate = 0
+
+        st.warning(
+            "No transport rate found"
         )
 
     else:
 
-        inland = 0
+        transport_rate = float(
+            transport_match.iloc[0]["TOTAL CHARGE"]
+        )
 
 
 
-    total = (
-        ocean +
-        inland
-    ) * qty
+    # Total
 
+    ocean_total = ocean_rate * containers
+
+    transport_total = transport_rate * containers
+
+    grand_total = (
+        ocean_total +
+        transport_total
+    )
+
+
+
+    # =========================
+    # RESULTS
+    # =========================
 
 
     st.success(
@@ -255,13 +257,18 @@ if st.button("Calculate"):
     )
 
 
-    st.write(
-        f"Ocean Freight: R {ocean:,.2f}"
+    st.subheader(
+        "Cost Breakdown"
     )
 
 
     st.write(
-        f"Transport ({zone}): R {inland:,.2f}"
+        f"Ocean Freight ({containers} containers): R {ocean_total:,.2f}"
+    )
+
+
+    st.write(
+        f"Transport ({zone}): R {transport_total:,.2f}"
     )
 
 
@@ -269,5 +276,5 @@ if st.button("Calculate"):
 
 
     st.header(
-        f"TOTAL: R {total:,.2f}"
+        f"TOTAL LOGISTICS COST: R {grand_total:,.2f}"
     )
