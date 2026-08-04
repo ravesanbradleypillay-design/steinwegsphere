@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -6,53 +5,318 @@ import re
 
 
 # ==================================================
-# PAGE SETTINGS
+# PAGE CONFIGURATION
 # ==================================================
 
 st.set_page_config(
-    page_title="Steinweg Master Freight Calculator",
+    page_title="SteinwegSphere",
     page_icon="🚢",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
-
-st.title("STEINWEG")
-st.subheader("Master Freight & Transport Calculator")
-
-st.caption(
-    "Ocean freight is displayed in USD. "
-    "Transport is displayed in ZAR."
-)
-
-st.divider()
 
 
 # ==================================================
-# FILE NAMES
+# BLUE LOGISTICS DESIGN
+# ==================================================
+
+st.markdown(
+    """
+    <style>
+
+    .stApp {
+        background:
+        linear-gradient(
+            135deg,
+            rgba(3, 15, 35, 0.97),
+            rgba(5, 36, 75, 0.94),
+            rgba(0, 78, 145, 0.88)
+        ),
+        url("https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=2200&q=85");
+
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    [data-testid="stHeader"] {
+        background: rgba(0, 0, 0, 0);
+    }
+
+    .main {
+        background: transparent;
+    }
+
+    .hero {
+        text-align: center;
+        padding: 35px 20px 28px 20px;
+        border-radius: 25px;
+        background:
+        linear-gradient(
+            135deg,
+            rgba(4, 19, 42, 0.96),
+            rgba(0, 91, 170, 0.78)
+        );
+
+        border: 1px solid
+        rgba(87, 190, 255, 0.45);
+
+        box-shadow:
+        0 15px 50px
+        rgba(0, 0, 0, 0.40);
+
+        margin-bottom: 25px;
+    }
+
+    .steinweg-title {
+        color: white;
+        font-size: 48px;
+        font-weight: 800;
+        letter-spacing: 7px;
+        margin-bottom: 0px;
+    }
+
+    .bridge-title {
+        color: #54c7ff;
+        font-size: 21px;
+        font-weight: 500;
+        letter-spacing: 5px;
+        margin-top: 2px;
+    }
+
+    .hero-subtitle {
+        color: #c9eaff;
+        font-size: 16px;
+        margin-top: 18px;
+    }
+
+    .section-title {
+        color: white;
+        font-size: 25px;
+        font-weight: 700;
+        margin-top: 12px;
+        margin-bottom: 12px;
+    }
+
+    .carrier-card {
+        background:
+        linear-gradient(
+            145deg,
+            rgba(7, 28, 58, 0.96),
+            rgba(8, 74, 128, 0.80)
+        );
+
+        border:
+        1px solid
+        rgba(80, 190, 255, 0.35);
+
+        border-radius: 18px;
+
+        padding: 18px;
+
+        min-height: 205px;
+
+        box-shadow:
+        0 8px 25px
+        rgba(0, 0, 0, 0.28);
+
+        margin-bottom: 12px;
+    }
+
+    .carrier-name {
+        color: white;
+        font-size: 22px;
+        font-weight: 750;
+        margin-top: 8px;
+    }
+
+    .rate-text {
+        color: #55d0ff;
+        font-size: 25px;
+        font-weight: 800;
+        margin-top: 10px;
+    }
+
+    .small-label {
+        color: #9bcde7;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 10px;
+    }
+
+    .small-value {
+        color: white;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .summary-card {
+        background:
+        linear-gradient(
+            145deg,
+            rgba(4, 24, 51, 0.98),
+            rgba(0, 88, 155, 0.80)
+        );
+
+        border:
+        1px solid
+        rgba(78, 201, 255, 0.50);
+
+        border-radius: 20px;
+
+        padding: 25px;
+
+        box-shadow:
+        0 12px 35px
+        rgba(0, 0, 0, 0.35);
+    }
+
+    .summary-heading {
+        color: #8bdcff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 2px;
+    }
+
+    .summary-value {
+        color: white;
+        font-size: 32px;
+        font-weight: 800;
+        margin-top: 5px;
+    }
+
+    .currency-note {
+        color: #b9e7ff;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    .stTextInput input,
+    .stNumberInput input,
+    .stSelectbox div[data-baseweb="select"] {
+        background-color:
+        rgba(255, 255, 255, 0.96);
+
+        border-radius: 10px;
+    }
+
+    .stButton button {
+        width: 100%;
+        border-radius: 12px;
+        border: none;
+
+        background:
+        linear-gradient(
+            90deg,
+            #0088d1,
+            #00b9f2
+        );
+
+        color: white;
+
+        font-size: 17px;
+        font-weight: 700;
+
+        padding: 12px;
+
+        box-shadow:
+        0 7px 20px
+        rgba(0, 150, 230, 0.30);
+    }
+
+    .stButton button:hover {
+        background:
+        linear-gradient(
+            90deg,
+            #00a5ed,
+            #32d0ff
+        );
+
+        color: white;
+    }
+
+    div[data-testid="stMetric"] {
+        background:
+        rgba(5, 28, 57, 0.82);
+
+        border:
+        1px solid
+        rgba(80, 190, 255, 0.35);
+
+        padding: 18px;
+
+        border-radius: 16px;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #a8dcf5;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: white;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ==================================================
+# HERO
+# ==================================================
+
+st.markdown(
+    """
+    <div class="hero">
+
+        <div class="steinweg-title">
+        C. STEINWEG
+        </div>
+
+        <div class="bridge-title">
+        BRIDGE
+        </div>
+
+        <div class="hero-subtitle">
+        Intelligent Freight • Ocean Logistics • Landside Transport
+        </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ==================================================
+# FILES
 # ==================================================
 
 FREIGHT_FILE = "freight rates.xlsx"
 TRANSPORT_FILE = "transport rates.xls"
 
 
-# ==================================================
-# CHECK FILES
-# ==================================================
-
 if not os.path.exists(FREIGHT_FILE):
+
     st.error(
-        f"Missing file: {FREIGHT_FILE}"
+        "Missing file: freight rates.xlsx"
     )
+
     st.stop()
+
 
 if not os.path.exists(TRANSPORT_FILE):
+
     st.error(
-        f"Missing file: {TRANSPORT_FILE}"
+        "Missing file: transport rates.xls"
     )
+
     st.stop()
 
 
 # ==================================================
-# LOAD EXCEL FILES
+# LOAD DATA
 # ==================================================
 
 @st.cache_data
@@ -63,8 +327,6 @@ def load_data():
         engine="openpyxl"
     )
 
-    # Transport sheet is a wide tariff table,
-    # so do not use the first row as headings.
     transport_data = pd.read_excel(
         TRANSPORT_FILE,
         engine="xlrd",
@@ -78,7 +340,7 @@ freight, transport = load_data()
 
 
 # ==================================================
-# CLEAN FREIGHT HEADINGS
+# CLEAN FREIGHT DATA
 # ==================================================
 
 freight.columns = (
@@ -89,11 +351,8 @@ freight.columns = (
 )
 
 
-# ==================================================
-# REQUIRED FREIGHT COLUMNS
-# ==================================================
-
 required_columns = [
+
     "LINE",
     "POL",
     "POD",
@@ -102,6 +361,7 @@ required_columns = [
     "ROUTING",
     "FREQUENCY",
     "PREPAID / COLLECT"
+
 ]
 
 
@@ -119,12 +379,9 @@ missing_columns = [
 if missing_columns:
 
     st.error(
-        "The freight spreadsheet is missing: "
-        + ", ".join(missing_columns)
-    )
-
-    st.write(
-        "Columns found:"
+        "Missing freight columns: "
+        +
+        ", ".join(missing_columns)
     )
 
     st.write(
@@ -134,6 +391,21 @@ if missing_columns:
     st.stop()
 
 
+for column in required_columns:
+
+    freight[column] = (
+
+        freight[column]
+
+        .fillna("")
+
+        .astype(str)
+
+        .str.strip()
+
+    )
+
+
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -141,6 +413,7 @@ if missing_columns:
 def clean_text(value):
 
     if pd.isna(value):
+
         return ""
 
     return str(value).strip()
@@ -149,13 +422,17 @@ def clean_text(value):
 def money_to_number(value):
 
     if pd.isna(value):
+
         return None
+
 
     if isinstance(
         value,
         (int, float)
     ):
+
         return float(value)
+
 
     text = str(value)
 
@@ -179,20 +456,18 @@ def money_to_number(value):
         ""
     )
 
-    # Handles values such as:
-    # 2,500.00
-    # 2500.00
-    # 2 500,00
 
     if (
         "," in text
-        and "." in text
+        and
+        "." in text
     ):
 
         text = text.replace(
             ",",
             ""
         )
+
 
     elif "," in text:
 
@@ -201,10 +476,13 @@ def money_to_number(value):
             "."
         )
 
+
     try:
+
         return float(text)
 
     except ValueError:
+
         return None
 
 
@@ -213,88 +491,137 @@ def get_weight_range(value):
     text = clean_text(value)
 
     numbers = re.findall(
+
         r"\d+(?:\.\d+)?",
+
         text
+
     )
+
 
     if len(numbers) >= 2:
 
         return (
+
             float(numbers[0]),
+
             float(numbers[1])
+
         )
+
+
+    return None
+
+
+def carrier_logo(line):
+
+    line = str(line).upper().strip()
+
+
+    logo_map = {
+
+        "MSC":
+        "https://logo.clearbit.com/msc.com",
+
+        "MEDITERRANEAN SHIPPING COMPANY":
+        "https://logo.clearbit.com/msc.com",
+
+        "MAERSK":
+        "https://logo.clearbit.com/maersk.com",
+
+        "CMA CGM":
+        "https://logo.clearbit.com/cmacgm-group.com",
+
+        "CMA-CGM":
+        "https://logo.clearbit.com/cmacgm-group.com",
+
+        "HAPAG-LLOYD":
+        "https://logo.clearbit.com/hapag-lloyd.com",
+
+        "HAPAG LLOYD":
+        "https://logo.clearbit.com/hapag-lloyd.com",
+
+        "ONE":
+        "https://logo.clearbit.com/one-line.com",
+
+        "OCEAN NETWORK EXPRESS":
+        "https://logo.clearbit.com/one-line.com",
+
+        "COSCO":
+        "https://logo.clearbit.com/coscoshipping.com",
+
+        "EVERGREEN":
+        "https://logo.clearbit.com/evergreen-marine.com",
+
+        "PIL":
+        "https://logo.clearbit.com/pilship.com",
+
+        "ZIM":
+        "https://logo.clearbit.com/zim.com"
+
+    }
+
+
+    for key, url in logo_map.items():
+
+        if key in line:
+
+            return url
+
 
     return None
 
 
 # ==================================================
-# CLEAN FREIGHT DATA
+# FREIGHT SEARCH
 # ==================================================
 
-for column in [
-    "LINE",
-    "POL",
-    "POD",
-    "EQUIP TYPE",
-    "PREPAID / COLLECT"
-]:
-
-    freight[column] = (
-
-        freight[column]
-
-        .fillna("")
-
-        .astype(str)
-
-        .str.strip()
-
-    )
-
-
-# ==================================================
-# OCEAN FREIGHT SEARCH
-# ==================================================
-
-st.header(
-    "Ocean Freight Search"
+st.markdown(
+    """
+    <div class="section-title">
+    Search Ocean Freight
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
-search_col1, search_col2 = (
+search_one, search_two = (
     st.columns(2)
 )
 
 
-with search_col1:
+with search_one:
 
     user_pol = st.text_input(
-        "POL",
-        placeholder=(
-            "Enter Port of Loading"
-        )
+
+        "Port of Loading (POL)",
+
+        placeholder=
+        "Example: Durban"
+
     )
 
 
-with search_col2:
+with search_two:
 
     user_pod = st.text_input(
-        "POD",
-        placeholder=(
-            "Enter Port of Discharge"
-        )
+
+        "Port of Discharge (POD)",
+
+        placeholder=
+        "Example: Mundra"
+
     )
 
 
 st.caption(
-    "You can enter part of the port name. "
-    "For example: Durban, Shanghai, "
-    "Mundra or Jebel Ali."
+    "Enter part or all of the port name."
 )
 
 
 # ==================================================
-# SEARCH FREIGHT ROUTES
+# SEARCH RESULTS
 # ==================================================
 
 if (
@@ -302,6 +629,7 @@ if (
     and
     user_pod.strip()
 ):
+
 
     route_matches = freight[
 
@@ -337,67 +665,32 @@ if (
     if route_matches.empty:
 
         st.warning(
-            "No freight rates were found "
+            "No shipping-line rates were found "
             "for this POL and POD."
         )
 
 
     else:
 
-        st.success(
 
-            f"{len(route_matches)} "
-            "matching freight rate(s) found."
+        # ==============================================
+        # FILTERS
+        # ==============================================
 
+        filter_one, filter_two = (
+            st.columns(2)
         )
 
 
-        select_col1, select_col2, select_col3 = (
-            st.columns(3)
-        )
+        with filter_one:
 
+            equipment_options = [
 
-        with select_col1:
+                "All"
 
-            shipping_lines = sorted(
+            ] + sorted(
 
-                route_matches["LINE"]
-
-                .replace(
-                    "",
-                    pd.NA
-                )
-
-                .dropna()
-
-                .unique()
-
-            )
-
-
-            selected_line = st.selectbox(
-
-                "Shipping Line",
-
-                shipping_lines
-
-            )
-
-
-        line_matches = route_matches[
-
-            route_matches["LINE"]
-            ==
-            selected_line
-
-        ].copy()
-
-
-        with select_col2:
-
-            equipment_options = sorted(
-
-                line_matches[
+                route_matches[
                     "EQUIP TYPE"
                 ]
 
@@ -413,11 +706,11 @@ if (
             )
 
 
-            selected_equipment = (
+            equipment_filter = (
 
                 st.selectbox(
 
-                    "Equipment Type",
+                    "Container Type",
 
                     equipment_options
 
@@ -426,33 +719,16 @@ if (
             )
 
 
-        equipment_matches = (
+        with filter_two:
 
-            line_matches[
+            payment_options = [
 
-                line_matches[
-                    "EQUIP TYPE"
-                ]
+                "All"
 
-                ==
+            ] + sorted(
 
-                selected_equipment
-
-            ]
-
-            .copy()
-
-        )
-
-
-        with select_col3:
-
-            payment_options = sorted(
-
-                equipment_matches[
-
+                route_matches[
                     "PREPAID / COLLECT"
-
                 ]
 
                 .replace(
@@ -467,11 +743,11 @@ if (
             )
 
 
-            selected_payment = (
+            payment_filter = (
 
                 st.selectbox(
 
-                    "Prepaid / Collect",
+                    "Payment Type",
 
                     payment_options
 
@@ -480,89 +756,400 @@ if (
             )
 
 
-        selected_freight = (
+        filtered = (
+            route_matches.copy()
+        )
 
-            equipment_matches[
 
-                equipment_matches[
+        if equipment_filter != "All":
 
-                    "PREPAID / COLLECT"
+            filtered = filtered[
 
+                filtered[
+                    "EQUIP TYPE"
                 ]
 
                 ==
 
-                selected_payment
+                equipment_filter
 
             ]
 
-            .copy()
+
+        if payment_filter != "All":
+
+            filtered = filtered[
+
+                filtered[
+                    "PREPAID / COLLECT"
+                ]
+
+                ==
+
+                payment_filter
+
+            ]
+
+
+        # ==============================================
+        # REMOVE DUPLICATE OPTIONS
+        # ==============================================
+
+        filtered = (
+
+            filtered
+
+            .drop_duplicates(
+
+                subset=[
+
+                    "LINE",
+
+                    "EQUIP TYPE",
+
+                    "ALL IN RATE",
+
+                    "ROUTING",
+
+                    "FREQUENCY"
+
+                ]
+
+            )
+
+            .reset_index(
+
+                drop=True
+
+            )
 
         )
 
 
-        # ==================================================
-        # SHOW FREIGHT OPTIONS
-        # ==================================================
-
-        st.subheader(
-            "Available Shipping Options"
+        st.markdown(
+            """
+            <div class="section-title">
+            Available Shipping Lines
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
-        display_columns = [
+        st.success(
 
-            "LINE",
+            f"{len(filtered)} "
 
-            "POL",
-
-            "POD",
-
-            "EQUIP TYPE",
-
-            "ALL IN RATE",
-
-            "ROUTING",
-
-            "FREQUENCY"
-
-        ]
-
-
-        st.dataframe(
-
-            selected_freight[
-
-                display_columns
-
-            ],
-
-            use_container_width=True,
-
-            hide_index=True
+            "shipping option(s) found."
 
         )
 
 
-        # Use the first matching rate.
-        # The table above still displays all
-        # matching options.
+        # ==============================================
+        # SHOW CARRIER CARDS
+        # ==============================================
+
+        for start in range(
+
+            0,
+
+            len(filtered),
+
+            3
+
+        ):
+
+
+            card_columns = (
+
+                st.columns(3)
+
+            )
+
+
+            for position in range(3):
+
+
+                row_number = (
+
+                    start
+
+                    +
+
+                    position
+
+                )
+
+
+                if row_number >= len(filtered):
+
+                    continue
+
+
+                row = (
+
+                    filtered.iloc[
+
+                        row_number
+
+                    ]
+
+                )
+
+
+                line_name = (
+
+                    clean_text(
+
+                        row["LINE"]
+
+                    )
+
+                )
+
+
+                rate = (
+
+                    money_to_number(
+
+                        row[
+                            "ALL IN RATE"
+                        ]
+
+                    )
+
+                )
+
+
+                if rate is None:
+
+                    rate = 0.0
+
+
+                routing = (
+
+                    clean_text(
+
+                        row["ROUTING"]
+
+                    )
+
+                )
+
+
+                frequency = (
+
+                    clean_text(
+
+                        row["FREQUENCY"]
+
+                    )
+
+                )
+
+
+                logo = (
+
+                    carrier_logo(
+
+                        line_name
+
+                    )
+
+                )
+
+
+                with card_columns[position]:
+
+
+                    if logo:
+
+                        try:
+
+                            st.image(
+
+                                logo,
+
+                                width=115
+
+                            )
+
+                        except Exception:
+
+                            st.markdown(
+
+                                f"""
+
+                                <div class=
+                                "carrier-name">
+
+                                {line_name}
+
+                                </div>
+
+                                """,
+
+                                unsafe_allow_html=True
+
+                            )
+
+
+                    st.markdown(
+
+                        f"""
+
+                        <div class=
+                        "carrier-card">
+
+                        <div class=
+                        "carrier-name">
+
+                        {line_name}
+
+                        </div>
+
+                        <div class=
+                        "rate-text">
+
+                        USD {rate:,.2f}
+
+                        </div>
+
+                        <div class=
+                        "small-label">
+
+                        Routing
+
+                        </div>
+
+                        <div class=
+                        "small-value">
+
+                        {routing}
+
+                        </div>
+
+                        <div class=
+                        "small-label">
+
+                        Frequency
+
+                        </div>
+
+                        <div class=
+                        "small-value">
+
+                        {frequency}
+
+                        </div>
+
+                        </div>
+
+                        """,
+
+                        unsafe_allow_html=True
+
+                    )
+
+
+        # ==============================================
+        # SELECT CARRIER
+        # ==============================================
+
+        st.markdown(
+            """
+            <div class="section-title">
+            Select Your Shipping Option
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+        option_labels = []
+
+
+        for index, row in filtered.iterrows():
+
+            rate = (
+
+                money_to_number(
+
+                    row[
+                        "ALL IN RATE"
+                    ]
+
+                )
+
+            )
+
+
+            if rate is None:
+
+                rate = 0.0
+
+
+            option_labels.append(
+
+                f"{row['LINE']} | "
+
+                f"{row['EQUIP TYPE']} | "
+
+                f"USD {rate:,.2f} | "
+
+                f"{row['ROUTING']} | "
+
+                f"{row['FREQUENCY']}"
+
+            )
+
+
+        selected_option = (
+
+            st.radio(
+
+                "Choose a shipping line",
+
+                options=list(
+
+                    range(
+
+                        len(option_labels)
+
+                    )
+
+                ),
+
+                format_func=
+
+                lambda x:
+
+                option_labels[x],
+
+                horizontal=False
+
+            )
+
+        )
+
 
         selected_row = (
 
-            selected_freight.iloc[0]
+            filtered.iloc[
+
+                selected_option
+
+            ]
 
         )
 
 
-        freight_rate = (
+        selected_rate = (
 
             money_to_number(
 
                 selected_row[
-
                     "ALL IN RATE"
-
                 ]
 
             )
@@ -570,9 +1157,22 @@ if (
         )
 
 
-        if freight_rate is None:
+        if selected_rate is None:
 
-            freight_rate = 0.0
+            selected_rate = 0.0
+
+
+        selected_line = (
+
+            clean_text(
+
+                selected_row[
+                    "LINE"
+                ]
+
+            )
+
+        )
 
 
         selected_routing = (
@@ -580,9 +1180,7 @@ if (
             clean_text(
 
                 selected_row[
-
                     "ROUTING"
-
                 ]
 
             )
@@ -595,9 +1193,7 @@ if (
             clean_text(
 
                 selected_row[
-
                     "FREQUENCY"
-
                 ]
 
             )
@@ -605,26 +1201,43 @@ if (
         )
 
 
-        # ==================================================
-        # CONTAINER QUANTITY
-        # ==================================================
+        selected_equipment = (
 
-        quantity = st.number_input(
+            clean_text(
 
-            "Number of Containers",
+                selected_row[
+                    "EQUIP TYPE"
+                ]
 
-            min_value=1,
+            )
 
-            value=1,
+        )
 
-            step=1
+
+        # ==============================================
+        # QUANTITY
+        # ==============================================
+
+        quantity = (
+
+            st.number_input(
+
+                "Number of Containers",
+
+                min_value=1,
+
+                value=1,
+
+                step=1
+
+            )
 
         )
 
 
         freight_total = (
 
-            freight_rate
+            selected_rate
 
             *
 
@@ -636,23 +1249,28 @@ if (
         st.divider()
 
 
-        # ==================================================
+        # ==============================================
         # TRANSPORT
-        # ==================================================
+        # ==============================================
 
-        st.header(
-            "Transport"
+        st.markdown(
+            """
+            <div class="section-title">
+            Landside Transport
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
-        transport_col1, transport_col2, transport_col3 = (
+        transport_one, transport_two, transport_three = (
 
             st.columns(3)
 
         )
 
 
-        with transport_col1:
+        with transport_one:
 
             selected_zone = (
 
@@ -675,13 +1293,13 @@ if (
             )
 
 
-        with transport_col2:
+        with transport_two:
 
             transport_type = (
 
                 st.selectbox(
 
-                    "Container / Transport Type",
+                    "Container Type",
 
                     [
 
@@ -696,7 +1314,7 @@ if (
             )
 
 
-        with transport_col3:
+        with transport_three:
 
             cargo_weight = (
 
@@ -715,18 +1333,9 @@ if (
             )
 
 
-        st.caption(
-
-            "20ft containers use 6M FCL. "
-
-            "40ft containers use 12M FCL."
-
-        )
-
-
-        # ==================================================
-        # TRANSPORT LOOKUP
-        # ==================================================
+        # ==============================================
+        # TRANSPORT COLUMN MAP
+        # ==============================================
 
         zone_columns = {
 
@@ -760,13 +1369,9 @@ if (
         weight_column = (
 
             zone_columns[
-
                 selected_zone
-
             ][
-
                 "weight"
-
             ]
 
         )
@@ -775,13 +1380,9 @@ if (
         total_column = (
 
             zone_columns[
-
                 selected_zone
-
             ][
-
                 "total"
-
             ]
 
         )
@@ -805,6 +1406,7 @@ if (
 
         ):
 
+
             row_text = " ".join(
 
                 clean_text(value)
@@ -812,23 +1414,13 @@ if (
                 for value in
 
                 transport.iloc[
-
                     row_number
-
                 ].tolist()
 
             ).upper()
 
 
-            if (
-
-                section_name
-
-                in
-
-                row_text
-
-            ):
+            if section_name in row_text:
 
                 section_rows.append(
 
@@ -843,6 +1435,7 @@ if (
 
 
         if section_rows:
+
 
             start_row = (
 
@@ -920,25 +1513,9 @@ if (
 
                     upper_text
 
-                    or
-
-                    "BREAKBULK"
-
-                    in
-
-                    upper_text
-
                 ):
 
-                    if (
-
-                        row_number
-
-                        >
-
-                        start_row
-
-                    ):
+                    if row_number > start_row:
 
                         break
 
@@ -955,6 +1532,7 @@ if (
 
 
                 if weight_range:
+
 
                     minimum = (
 
@@ -988,6 +1566,7 @@ if (
 
                     ):
 
+
                         transport_rate = (
 
                             money_to_number(
@@ -1013,14 +1592,6 @@ if (
 
             transport_total = 0.0
 
-            transport_message = (
-
-                "No matching transport "
-
-                "rate was found."
-
-            )
-
         else:
 
             transport_total = (
@@ -1033,174 +1604,215 @@ if (
 
             )
 
-            transport_message = (
 
-                "Transport rate found."
-
-            )
-
-
-        # ==================================================
-        # FINAL RESULTS
-        # ==================================================
+        # ==============================================
+        # FINAL SUMMARY
+        # ==============================================
 
         st.divider()
 
-        st.header(
-            "Quote Summary"
+
+        st.markdown(
+            """
+            <div class="section-title">
+            Quote Summary
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
-        result_col1, result_col2 = (
+        summary_one, summary_two = (
 
             st.columns(2)
 
         )
 
 
-        with result_col1:
-
-            st.subheader(
-                "Ocean Freight"
-            )
+        with summary_one:
 
 
-            st.metric(
+            st.markdown(
 
-                "Freight Total",
+                f"""
 
-                f"USD {freight_total:,.2f}"
+                <div class=
+                "summary-card">
 
-            )
+                <div class=
+                "summary-heading">
 
+                OCEAN FREIGHT
 
-            st.write(
+                </div>
 
-                f"**Shipping Line:** "
+                <div class=
+                "summary-value">
 
-                f"{selected_line}"
+                USD {freight_total:,.2f}
 
-            )
+                </div>
 
+                <div class=
+                "currency-note">
 
-            st.write(
+                {selected_line}
 
-                f"**Routing:** "
+                <br>
 
-                f"{selected_routing}"
+                {selected_equipment}
 
-            )
+                <br>
 
+                Routing:
+                {selected_routing}
 
-            st.write(
+                <br>
 
-                f"**Frequency:** "
+                Frequency:
+                {selected_frequency}
 
-                f"{selected_frequency}"
+                <br>
 
-            )
+                Containers:
+                {quantity}
 
+                </div>
 
-            st.write(
+                </div>
 
-                f"**Equipment:** "
+                """,
 
-                f"{selected_equipment}"
-
-            )
-
-
-            st.write(
-
-                f"**Containers:** "
-
-                f"{quantity}"
+                unsafe_allow_html=True
 
             )
 
 
-        with result_col2:
-
-            st.subheader(
-                "Transport"
-            )
+        with summary_two:
 
 
-            st.metric(
+            if transport_rate is None:
 
-                "Transport Total",
+                transport_display = (
+                    "Rate Not Found"
+                )
 
-                f"R {transport_total:,.2f}"
+            else:
 
-            )
+                transport_display = (
 
-
-            st.write(
-
-                f"**Zone:** "
-
-                f"{selected_zone}"
-
-            )
-
-
-            st.write(
-
-                f"**Transport Type:** "
-
-                f"{transport_type}"
-
-            )
-
-
-            st.write(
-
-                f"**Cargo Weight:** "
-
-                f"{cargo_weight:,.1f} Tons"
-
-            )
-
-
-            if applied_weight_break:
-
-                st.write(
-
-                    f"**Weight Break:** "
-
-                    f"{applied_weight_break}"
+                    f"R {transport_total:,.2f}"
 
                 )
 
 
-            st.write(
+            st.markdown(
 
-                f"**Status:** "
+                f"""
 
-                f"{transport_message}"
+                <div class=
+                "summary-card">
+
+                <div class=
+                "summary-heading">
+
+                LANDSIDE TRANSPORT
+
+                </div>
+
+                <div class=
+                "summary-value">
+
+                {transport_display}
+
+                </div>
+
+                <div class=
+                "currency-note">
+
+                {selected_zone}
+
+                <br>
+
+                {transport_type}
+
+                <br>
+
+                Cargo Weight:
+                {cargo_weight:,.1f} Tons
+
+                <br>
+
+                Weight Break:
+                {applied_weight_break}
+
+                <br>
+
+                Containers:
+                {quantity}
+
+                </div>
+
+                </div>
+
+                """,
+
+                unsafe_allow_html=True
 
             )
 
 
         st.info(
 
-            "Ocean freight is shown in USD "
+            "Ocean freight is displayed "
 
-            "and transport is shown in ZAR. "
+            "in USD and landside transport "
 
-            "They are intentionally not added "
+            "is displayed in ZAR. "
 
-            "together."
+            "The currencies are kept "
+
+            "separate."
 
         )
 
 
 else:
 
-    st.info(
 
-        "Enter both POL and POD "
+    st.markdown(
 
-        "to search available shipping lines."
+        """
+
+        <div style="
+
+        background:
+        rgba(4, 27, 57, 0.80);
+
+        border:
+        1px solid
+        rgba(75, 188, 255, 0.30);
+
+        border-radius: 18px;
+
+        padding: 25px;
+
+        color: #cceeff;
+
+        text-align: center;
+
+        ">
+
+        Enter both the POL and POD
+
+        to display all available
+
+        shipping-line options.
+
+        </div>
+
+        """,
+
+        unsafe_allow_html=True
 
     )
