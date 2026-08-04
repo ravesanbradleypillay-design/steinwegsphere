@@ -1,80 +1,192 @@
 import streamlit as st
 import pandas as pd
+import os
 
 
-# Page settings
 st.set_page_config(
     page_title="Steinweg Landside Calculator",
-    page_icon="🚢"
+    page_icon="🚢",
+    layout="wide"
 )
 
-
-# Load Excel files
-
-msc_rates = pd.read_excel("MSC_Rates.xlsx")
-landside_rates = pd.read_excel("Landside_Rates.xlsx")
-
-
-# Title
 
 st.title("STEINWEG")
-st.subheader("Master Landside Freight Calculator")
+st.subheader("Master Freight & Transport Calculator")
+
+
+# FILES
+
+freight_file = "Copy of CSI Africa Buy Sell Rates Manual - (01 Aug 2026) V.1.xls"
+transport_file = "CSL - July 2026.xls"
+
+
+
+# LOAD EXCEL
+
+@st.cache_data
+def load_excel():
+
+    freight = pd.read_excel(
+        freight_file
+    )
+
+    transport = pd.read_excel(
+        transport_file
+    )
+
+    return freight, transport
+
+
+
+if not os.path.exists(freight_file):
+    st.error("Freight Excel file missing")
+    st.stop()
+
+
+if not os.path.exists(transport_file):
+    st.error("Transport Excel file missing")
+    st.stop()
+
+
+
+freight, transport = load_excel()
+
+
+
+# CLEAN HEADERS
+
+freight.columns = (
+    freight.columns
+    .astype(str)
+    .str.strip()
+)
+
+
+transport.columns = (
+    transport.columns
+    .astype(str)
+    .str.strip()
+)
+
+
+
+# FIND IMPORTANT COLUMNS AUTOMATICALLY
+
+def find_column(df, words):
+
+    for col in df.columns:
+
+        for word in words:
+
+            if word.lower() in col.lower():
+                return col
+
+    return None
+
+
+
+pod_col = find_column(
+    freight,
+    ["POD"]
+)
+
+
+equip_col = find_column(
+    freight,
+    ["EQUIP"]
+)
+
+
+rate_col = find_column(
+    freight,
+    ["ALL IN", "RATE"]
+)
+
+
+payment_col = find_column(
+    freight,
+    ["PREPAID"]
+)
+
+
+
+zone_col = find_column(
+    transport,
+    ["ZONE"]
+)
+
+
+charge_col = find_column(
+    transport,
+    ["TOTAL"]
+)
+
 
 
 st.divider()
 
 
-# User inputs
-
-shipping_line = st.selectbox(
-    "Shipping Line",
-    [
-        "MSC",
-        "Maersk",
-        "CMA CGM",
-        "Hapag Lloyd"
-    ]
-)
+st.header("Shipment Details")
 
 
-container = st.selectbox(
-    "Container Size",
-    [
-        "20GP",
-        "40GP",
-        "40HC"
-    ]
-)
+col1,col2,col3 = st.columns(3)
 
 
-port = st.selectbox(
-    "Port",
-    [
-        "Durban",
-        "Cape Town",
-        "Port Elizabeth"
-    ]
-)
+with col1:
+
+    pod = st.selectbox(
+        "POD",
+        sorted(
+            freight[pod_col]
+            .dropna()
+            .unique()
+        )
+    )
+
+
+with col2:
+
+    equipment = st.selectbox(
+        "Equipment Type",
+        sorted(
+            freight[equip_col]
+            .dropna()
+            .unique()
+        )
+    )
+
+
+with col3:
+
+    payment = st.selectbox(
+        "Payment Type",
+        sorted(
+            freight[payment_col]
+            .dropna()
+            .unique()
+        )
+    )
+
 
 
 st.divider()
 
 
-transport = st.number_input(
-    "Transport Cost (ZAR)",
-    min_value=0
+zone = st.selectbox(
+    "Transport Zone",
+    sorted(
+        transport[zone_col]
+        .dropna()
+        .unique()
+    )
 )
 
 
-clearing = st.number_input(
-    "Clearing Cost (ZAR)",
-    min_value=0
-)
 
-
-handling = st.number_input(
-    "Handling Cost (ZAR)",
-    min_value=0
+qty = st.number_input(
+    "Number of Containers",
+    min_value=1,
+    value=1
 )
 
 
@@ -82,50 +194,74 @@ handling = st.number_input(
 if st.button("Calculate"):
 
 
-    # Find freight rate
+    # FREIGHT LOOKUP
 
-    freight = 0
+    freight_result = freight[
+
+        (freight[pod_col] == pod)
+
+        &
+
+        (freight[equip_col] == equipment)
+
+        &
+
+        (freight[payment_col] == payment)
+
+    ]
 
 
-    if shipping_line == "MSC":
 
-        result = msc_rates[
-            (msc_rates["Container"] == container)
-        ]
+    if len(freight_result) > 0:
+
+        ocean = float(
+            freight_result.iloc[0][rate_col]
+        )
+
+    else:
+
+        ocean = 0
 
 
-        if not result.empty:
-            freight = result.iloc[0]["Freight"]
+
+    # TRANSPORT LOOKUP
+
+    transport_result = transport[
+        transport[zone_col] == zone
+    ]
+
+
+    if len(transport_result) > 0:
+
+        inland = float(
+            transport_result.iloc[0][charge_col]
+        )
+
+    else:
+
+        inland = 0
 
 
 
     total = (
-        freight +
-        transport +
-        clearing +
-        handling
+        ocean +
+        inland
+    ) * qty
+
+
+
+    st.success(
+        "Quote Generated"
     )
 
 
-    st.success("Calculation Complete")
-
-
-    st.write("### Cost Breakdown")
-
     st.write(
-        f"Ocean Freight: R {freight:,.2f}"
+        f"Ocean Freight: R {ocean:,.2f}"
     )
 
-    st.write(
-        f"Transport: R {transport:,.2f}"
-    )
 
     st.write(
-        f"Clearing: R {clearing:,.2f}"
-    )
-
-    st.write(
-        f"Handling: R {handling:,.2f}"
+        f"Transport ({zone}): R {inland:,.2f}"
     )
 
 
